@@ -1,0 +1,45 @@
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import electron from 'vite-plugin-electron';
+import renderer from 'vite-plugin-electron-renderer';
+import path from 'path';
+export default defineConfig({
+    plugins: [
+        react(),
+        electron([
+            {
+                // Main-process entrypoint of the Electron App
+                entry: 'src/main/main.ts',
+                vite: {
+                    build: {
+                        outDir: 'dist-electron',
+                        rollupOptions: {
+                            external: ['better-sqlite3']
+                        }
+                    }
+                }
+            },
+            {
+                entry: 'src/main/preload.ts',
+                onstart: function (options) {
+                    // Notify the Renderer-Process to reload the page when the Preload-Scripts build is complete
+                    options.reload();
+                },
+                vite: {
+                    build: {
+                        outDir: 'dist-electron'
+                    }
+                }
+            }
+        ]),
+        renderer()
+    ],
+    resolve: {
+        alias: {
+            '@': path.resolve(__dirname, './src')
+        }
+    },
+    server: {
+        port: 5173
+    }
+});
