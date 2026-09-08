@@ -9,13 +9,15 @@ export default defineConfig({
     react(),
     electron([
       {
-        // Main-process entrypoint of the Electron App
         entry: 'src/main/main.ts',
         vite: {
           build: {
             outDir: 'dist-electron',
             rollupOptions: {
-              external: ['better-sqlite3']
+              external: ['better-sqlite3', 'electron'],
+              output: {
+                format: 'cjs'
+              }
             }
           }
         }
@@ -23,12 +25,17 @@ export default defineConfig({
       {
         entry: 'src/main/preload.ts',
         onstart(options) {
-          // Notify the Renderer-Process to reload the page when the Preload-Scripts build is complete
           options.reload();
         },
         vite: {
           build: {
-            outDir: 'dist-electron'
+            outDir: 'dist-electron',
+            rollupOptions: {
+              external: ['electron'],
+              output: {
+                format: 'cjs'
+              }
+            }
           }
         }
       }

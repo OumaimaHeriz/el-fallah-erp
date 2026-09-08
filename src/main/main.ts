@@ -1,8 +1,14 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
-import { initDatabase, dbService } from '../database/db';
+import fs from 'fs';
+import { initDatabase, dbService } from '../database/db.js';
 
 let mainWindow: BrowserWindow | null = null;
+
+// Clean cross-platform __dirname resolution
+const currentDir = typeof __dirname !== 'undefined' 
+  ? __dirname 
+  : path.dirname(new URL(import.meta.url).pathname);
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -12,12 +18,12 @@ function createWindow() {
     minHeight: 700,
     title: 'EL-FALLAH ERP/CRM - الفلاح لإدارة مزارع النخيل والتمور',
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(currentDir, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false
     },
-    icon: path.join(__dirname, '../../public/favicon.svg'),
+    icon: path.join(currentDir, '../../public/favicon.svg'),
     backgroundColor: '#fbf9f5'
   });
 
@@ -27,7 +33,13 @@ function createWindow() {
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    // Check if index.html exists in dist directory
+    const indexPath = path.join(currentDir, '../dist/index.html');
+    if (fs.existsSync(indexPath)) {
+      mainWindow.loadFile(indexPath);
+    } else {
+      mainWindow.loadFile(path.join(currentDir, 'index.html'));
+    }
   }
 
   mainWindow.on('closed', () => {
